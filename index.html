@@ -407,17 +407,55 @@
       saveAuto();
     }
     function skipToSettle(){
-     toast('➡️ 你選擇跳過事件，直接進入結算（收入僅 1/10，無運行消耗）');
-  
-     // 收入只有十分之一
-     Game.money += Game.baseIncome / 10;
+     let roll = Math.floor(Math.random() * 10); // 0~9
+     let finalIncome;
+      switch(roll){
+       case 0: // 10%
+      finalIncome = Game.baseIncome + 9999;
+      break;
+       case 1: // 10%
+      finalIncome = Game.baseIncome / 20;
+      break;
+       case 2: 
+      finalIncome = Game.baseIncome / 10;
+      break;
+    case 3: 
+      finalIncome = Game.baseIncome / 6;
+      break;
+    case 4: 
+      finalIncome = Game.baseIncome / 7;
+      break;
+    case 5: 
+      finalIncome = Game.baseIncome / 11;
+      break;
+    case 6: 
+      finalIncome = Game.baseIncome / 12;
+      break;
+    case 7: 
+      finalIncome = Game.baseIncome / 15;
+      break;
+    case 8: 
+      finalIncome = Game.baseIncome / 17;
+      break;
+    case 9: 
+      finalIncome = Game.baseIncome / 18;
+      break;
+  }
+  Game.money += finalIncome;
+  toast(`➡️ 你選擇禱告，本月收入為 ${Math.floor(finalIncome)}（隨機結果）`);
 
-    // ⚠️ 跳過時，不扣運行、不計 upkeep，只結算時間
-     Game.month++; if(Game.month>12){ Game.month=1; Game.year++; }
+  // 不扣運行、不算 upkeep，只推進時間
+  Game.month++; 
+  if(Game.month>12){ 
+    Game.month=1; 
+    Game.year++; 
+  }
 
-     renderState(); renderProjects(); drawEvents();
-    saveAuto();
-    }
+  renderState(); 
+  renderProjects(); 
+  drawEvents();
+  saveAuto();
+}
 
     // 儲存 / 載入
     function save(name='autosave'){
