@@ -407,16 +407,18 @@
       saveAuto();
     }
     function skipToSettle(){
-     let roll = Math.floor(Math.random() * 10); // 0~9
-     let finalIncome;
-      switch(roll){
-       case 0: // 10%
-      finalIncome = Game.baseIncome + 9999;
+  let roll = Math.floor(Math.random() * 10); // 0~9
+  let finalIncome;
+  switch(roll){
+    case 0: // 10%
+      finalIncome = 0; 
+      Game.baseIncome += 99; // 永久加職涯月收入
+      toast('✨ 奇蹟降臨！你的職涯月收入永久增加 +99 ✨');
       break;
-       case 1: // 10%
+    case 1: 
       finalIncome = Game.baseIncome / 20;
       break;
-       case 2: 
+    case 2: 
       finalIncome = Game.baseIncome / 10;
       break;
     case 3: 
@@ -441,13 +443,18 @@
       finalIncome = Game.baseIncome / 18;
       break;
   }
-  Game.money += finalIncome;
-  toast(`➡️ 你選擇禱告，本月收入為 ${Math.floor(finalIncome)}（隨機結果）`);
+  // 取整數，避免小數點
+  finalIncome = Math.floor(finalIncome);
 
+  Game.money += finalIncome;
+
+  if (roll !== 0) {
+    toast(`➡️ 你選擇禱告，本月收入為 ${finalIncome}（隨機結果）`);
+  }
   // 不扣運行、不算 upkeep，只推進時間
   Game.month++; 
-  if(Game.month>12){ 
-    Game.month=1; 
+  if(Game.month > 12){ 
+    Game.month = 1; 
     Game.year++; 
   }
 
