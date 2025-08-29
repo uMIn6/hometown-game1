@@ -470,6 +470,53 @@
       footerBox.style.display="none";
     }
   });
+
+  const skipBtn = document.getElementById('skipBtn');
+  const nextBtn = document.getElementById('nextBtn');
+  // 假設有個玩家狀態
+  let player = {
+    income: 10000,   // 本月收入
+    cost: 4000,      // 本月支出
+    trust: 50,       // 社群信任度
+    run: 100         // 運行點數
+  };
+  // 跳到結算：收入縮小為十分之一，運行不扣
+  skipBtn.addEventListener('click', () => {
+    console.log("➡️ 跳到結算：收入變成十分之一，運行不扣");
+    runMonthlyCalculation(true);  // isSkip = true
+    showSettlement("➡️ 跳到結算");
+  });
+  // 正常結算：收入正常，運行扣10
+  nextBtn.addEventListener('click', () => {
+    console.log("✅ 正常結算：收入正常，運行扣10");
+    runMonthlyCalculation(false); // isSkip = false
+    showSettlement("✅ 結算本月");
+  });
+  // 結算運算
+  function runMonthlyCalculation(isSkip) {
+    let finalIncome = isSkip ? player.income / 10 : player.income;
+    let net = finalIncome - player.cost;
+    console.log(`收入：${finalIncome}`);
+    console.log(`支出：${player.cost}`);
+    console.log(`淨收益：${net}`);
+    // 更新社群信任度（只是示範）
+    if (net >= 0) {
+      player.trust += 2;
+    } else {
+      player.trust -= 3;
+    }
+    // ✅ 結算本月 → 扣運行10
+    if (!isSkip) {
+      player.run -= 10;
+    }
+    console.log(`社群信任度：${player.trust}`);
+    console.log(`運行：${player.run}`);
+  }
+  // 顯示結算畫面
+  function showSettlement(mode) {
+    alert(`📊 ${mode}\n收入：${player.income}\n支出：${player.cost}\n社群信任：${player.trust}\n運行：${player.run}`);
+  }
+
   </script>
 </body>
 </html>
