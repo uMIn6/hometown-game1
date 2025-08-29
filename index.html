@@ -59,6 +59,9 @@
     .foot-grid{display:grid; grid-template-columns:1fr auto auto; gap:8px; align-items:center}
 
     .mini{font-size:12px}
+    .floating-btn {position: fixed;right: 12px;bottom: 12px;z-index: 1000;padding: 10px 14px;background: linear-gradient(180deg,#12325a 0%,#0d2545 100%);
+    border: 1px solid #1e3a5f;border-radius: 12px;color: #e5e7eb;font-weight: 600;cursor: pointer;box-shadow: 0 4px 12px rgba(0,0,0,.4);}
+    .floating-btn:hover { filter: brightness(1.1); }
   </style>
 </head>
 <body>
@@ -150,14 +153,18 @@
 
       <div class="cards" id="eventList" aria-live="polite"></div>
 
-      <div class="sticky-footer">
-        <div class="foot-grid">
-          <div class="mini muted">提示：每個月會自動結算運行成本與帶來的長期收益。社群信任會影響募資與志工參與。</div>
-          <button class="btn" id="skipBtn">➡️ 跳到結算</button>
-          <button class="btn btn-acc" id="nextBtn">✅ 結算本月</button>
+      <div class="sticky-footer" id="footerBox">
+       <div class="foot-grid">
+        <div class="mini muted">
+      提示：每個月會自動結算運行成本與帶來的長期收益。社群信任會影響募資與志工參與。
         </div>
+      <button class="btn" id="skipBtn">➡️ 跳到結算</button>
+     <button class="btn btn-acc" id="nextBtn">✅ 結算本月</button>
+  </div>
       </div>
     </main>
+
+    <button id="toggleFooter" class="floating-btn" style="display:none;">📌 提示</button>
 
     <!-- 右：專案資源庫 -->
     <aside class="panel right stack">
@@ -447,6 +454,22 @@
       // 初始提示
       setTimeout(()=>toast('提示：先從「深水井」或「小學翻修」開始，逐步建立信任'), 600);
     })();
+
+    const footerBox = document.getElementById('footerBox');
+    const toggleBtn = document.getElementById('toggleFooter');
+  // 10秒後自動收起
+  setTimeout(()=>{
+    footerBox.style.display = "none";
+    toggleBtn.style.display = "block";
+  },10000);
+  // 點擊浮動按鈕 → 展開 / 收起
+  toggleBtn.addEventListener('click', ()=>{
+    if(footerBox.style.display==="none"){
+      footerBox.style.display="block";
+    }else{
+      footerBox.style.display="none";
+    }
+  });
   </script>
 </body>
 </html>
