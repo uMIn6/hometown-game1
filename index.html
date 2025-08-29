@@ -70,7 +70,7 @@
     <aside class="panel stack">
       <div>
         <h1>🏡 希望旅程</h1>
-        <div class="sub">塞內加爾球星 Sadio Mané 的人生故事感動了我，我也希望有機會可以讓許多人經歷到這樣的見證 ~在球場外，為家鄉創造長久的改變。</div>
+        <div class="sub">塞內加爾球星 Sadio Mané 的人生故事，這樣的見證每個人是可以的 ~在球場外，為家鄉創造希望的力量。</div>
       </div>
 
       <div class="kpi">
@@ -105,7 +105,7 @@
       </div>
 
       <div class="card">
-        <div class="label">我們所看見的需要</div>
+        <div class="label">所見的需要</div>
         <div class="statrow">
           <div>
             教育
@@ -135,7 +135,7 @@
       </div>
 
       <div class="row">
-        <button class="btn btn-ghost" id="saveBtn">💾 休息一下</button>
+        <button class="btn btn-ghost" id="saveBtn">💾 主動休息</button>
         <button class="btn btn-ghost" id="loadBtn">📂 載入</button>
         <button class="btn btn-warn" id="resetBtn">🗑️ 遊戲可重來</button>
       </div>
@@ -146,7 +146,7 @@
       <div class="row" style="justify-content:space-between; align-items:flex-end">
         <div>
           <h1>📜 本月事件</h1>
-          <div class="sub">根據事件做抉擇，平衡長短期影響與財務。</div>
+          <div class="sub">根據事件做抉擇，你的決定影響著所看見的需要與財務。</div>
         </div>
         <div class="pill" id="villageTag">🏘️ 家鄉：未命名</div>
       </div>
@@ -164,14 +164,14 @@
       </div>
     </main>
 
-    <button id="toggleFooter" class="floating-btn" style="display:none;">📌 提示</button>
+    <button id="toggleFooter" class="floating-btn" style="display:none;">📌 前進明天</button>
 
     <!-- 右：專案資源庫 -->
     <aside class="panel right stack">
       <div class="row" style="justify-content:space-between; align-items:flex-end">
         <div>
           <h1>🧭 專案選單</h1>
-          <div class="sub">選擇要投資的在地專案（可重複建置不同地點）。</div>
+          <div class="sub">選擇想行動的在地專案（可重複建置在各地）。</div>
         </div>
         <button class="btn" id="renameBtn">✏️ 設定家鄉名稱</button>
       </div>
@@ -185,8 +185,8 @@
     const Game = {
       month: 1,
       year: 1,
-      money: 120000, // 初始資金
-      baseIncome: 80000, // 每月職涯收入（可想像為合約與代言）
+      money: 30001, // 初始資金
+      baseIncome: 20000, // 每月職涯收入（可想像為合約與代言）
       trust: 50, // 0-100
       metrics: { edu:20, health:20, water:20, jobs:20, sports:20, maint:50 }, // 0-100
       villageName: "未命名",
@@ -300,7 +300,7 @@
         el.innerHTML = `
           <div>
             <h3>${p.name}</h3>
-            <div class="muted mini">一次成本：${fmt(p.cost)}｜每月運行：${fmt(p.monthlyUpkeep)}<br>${p.longTerm}</div>
+            <div class="muted mini">一次成本：${fmt(p.cost)}｜每月維護支出：${fmt(p.monthlyUpkeep)}<br>${p.longTerm}</div>
             <div class="row" style="gap:6px; flex-wrap:wrap; margin-top:8px">
               ${Object.entries(p.effects).map(([k,v])=>`<span class="tag">${labelOf(k)} ${v>0?'+':''}${v}</span>`).join('')}
             </div>
@@ -354,7 +354,7 @@
       pool.forEach(e=>{
         const card = document.createElement('div');
         card.className = 'card';
-        card.innerHTML = `<h3>事件：${emojiFor(e.id)} ${e.text}</h3>`;
+        card.innerHTML = `<h3>：${emojiFor(e.id)} ${e.text}</h3>`;
         e.choices.forEach(c=>{
           const btn = document.createElement('button');
           btn.className='btn'; btn.textContent=c.label;
