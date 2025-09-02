@@ -1,596 +1,793 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="zh-Hant">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>希望旅程</title>
+  <title>棒球遊戲原型 — 整合修正版</title>
   <style>
-    :root{
-      --bg:#0f172a;        /* slate-900 */
-      --panel:#111827ee;   /* gray-900/93 */
-      --card:#0b1222;      /* dark card */
-      --muted:#9ca3af;     /* gray-400 */
-      --acc:#22c55e;       /* green-500 */
-      --acc-2:#38bdf8;     /* sky-400 */
-      --warn:#f59e0b;      /* amber-500 */
-      --danger:#ef4444;    /* red-500 */
-    }
-    *{box-sizing:border-box}
-    html,body{height:100%}
-    body{
-      margin:0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans TC", "Helvetica Neue", Arial, "Apple Color Emoji","Segoe UI Emoji";
-      background: radial-gradient(1200px 800px at 70% -10%, #1e293b 0%, #0b1020 45%, var(--bg) 100%);
-      color:#e5e7eb; overflow:hidden;
-    }
-    .app{display:grid; grid-template-columns: 320px 1fr 360px; gap:16px; height:100%; padding:16px}
-    @media (max-width: 1100px){.app{grid-template-columns:1fr; grid-template-rows:auto auto 1fr; overflow:auto}}
-    .panel{background:linear-gradient(180deg, #0c1428 0%, #0a0f1d 100%); border:1px solid #1f2a44; border-radius:16px; padding:16px; box-shadow: 0 10px 30px rgba(0,0,0,.35)}
-    h1{margin:0 0 6px; font-size:22px; letter-spacing:.3px}
-    .sub{color:var(--muted); font-size:12px}
-    .row{display:flex; gap:8px; align-items:center}
-    .stack{display:flex; flex-direction:column; gap:8px}
-    .kpi{display:grid; grid-template-columns:repeat(2,1fr); gap:8px}
-    .kpi .card{background:var(--card); border:1px solid #1e293b; border-radius:12px; padding:10px}
-    .kpi .label{font-size:12px; color:var(--muted)}
-    .kpi .val{font-weight:700; font-size:20px}
-    .money{font-size:28px; font-weight:800}
-    .pill{padding:4px 8px; background:#0f172a; border:1px solid #1f2a44; border-radius:999px; font-size:12px; color:var(--muted)}
-    .btn{cursor:pointer; background:linear-gradient(180deg, #12325a 0%, #0d2545 100%); border:1px solid #1e3a5f; border-radius:12px; padding:10px 12px; color:#e5e7eb; font-weight:600}
-    .btn:hover{filter:brightness(1.1)}
-    .btn:disabled{opacity:.5; cursor:not-allowed}
-    .btn-acc{background:linear-gradient(180deg, #1f9e54 0%, #157d3f 100%); border-color:#1a7a45}
-    .btn-warn{background:linear-gradient(180deg, #b97709 0%, #946107 100%); border-color:#9a6b09}
-    .btn-ghost{background:#0a1222; border-color:#1f2a44}
+    :root{ --bg:#071427; --panel:#0f1724; --accent:#f59e0b; --text:#e6eef8; }
+    html,body{height:100%;margin:0;font-family:Inter, "Noto Sans TC", system-ui, sans-serif;background:linear-gradient(180deg,#071427 0%,#0b1220 100%);color:var(--text);} 
+    .wrap{max-width:1200px;margin:16px auto;padding:14px;display:grid;grid-template-columns:720px 1fr;gap:12px}
+    .panel{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:12px;padding:12px;box-shadow:0 8px 20px rgba(2,6,23,0.6)}
+    canvas{width:100%;height:520px;background:linear-gradient(180deg,#14422b,#072215);display:block;border-radius:8px}
+    .sidebar{display:flex;flex-direction:column;gap:10px}
+    .score{display:flex;gap:8px;align-items:center}
+    .score .box{background:#071826;padding:8px 12px;border-radius:8px;font-weight:700}
+    .controls{display:grid;gap:8px}
+    .btn{background:var(--accent);color:#071427;padding:8px 10px;border-radius:8px;border:none;font-weight:700;cursor:pointer}
+    .small{font-size:13px;color:#cfe7ff}
+    .meter{height:10px;background:#0b2330;border-radius:999px;overflow:hidden}
+    .meter > i{display:block;height:100%;background:linear-gradient(90deg,#ffd27a,#ff8a00);width:40%}
+    .log{height:180px;overflow:auto;background:rgba(255,255,255,0.02);padding:8px;border-radius:8px;color:#cfe7ff}
+    .row{display:flex;gap:8px;align-items:center}
+    label{font-size:13px;color:#accbe6}
+    select,input[type=range]{width:100%}
+    footer{grid-column:1/-1;text-align:center;color:#8fb7dd;margin-top:8px;font-size:13px}
+    .muted{color:#7ea8cc;font-size:13px}
+    .tiny{font-size:12px;color:#9fc3ee}
+    .panel-scroll{max-height:220px;overflow:auto;padding:6px;background:rgba(255,255,255,0.01);border-radius:8px}
+    .touch-control{display:flex;gap:8px;align-items:center}
+    #managementPanel{background:#f8fafc;color:#0b1220;padding:8px;border-radius:8px}
+    .light-btn{background:#fff;color:#0b1220;border:1px solid #cbd5e1;padding:6px;border-radius:6px;cursor:pointer}
+    .stat{font-size:12px;color:#cfe7ff}
+.pitch-buttons {
+  display: flex;
+  gap: 6px;
+  margin-top: 4px;
+}
 
-    .progress{height:8px; background:#0b1222; border-radius:999px; overflow:hidden; border:1px solid #1f2a44}
-    .bar{height:100%; background:linear-gradient(90deg, var(--acc), var(--acc-2)); width:0%}
+.pitch-btn {
+  background: #fff;
+  color: #000;
+  border: 1px solid #000;
+  border-radius: 6px;
+  padding: 6px 10px;
+  cursor: pointer;
+  font-weight: 600;
+}
 
-    .cards{display:flex; flex-direction:column; gap:12px; overflow:auto; height:calc(100% - 40px); padding-right:4px}
-    .card{background:linear-gradient(180deg, #0f1a32 0%, #0b1222 100%); border:1px solid #1f2a44; border-radius:16px; padding:14px}
-    .card h3{margin:0 0 6px}
-    .muted{color:var(--muted)}
-    .right .project{display:grid; grid-template-columns:1fr auto; gap:8px; align-items:center}
-    .tag{font-size:11px; padding:2px 6px; border-radius:999px; border:1px solid #1f2a44; color:#cbd5e1; background:#0b1222}
-    .statrow{display:grid; grid-template-columns:1fr 1fr; gap:6px}
-    .meter{height:8px; background:#0b1222; border:1px solid #1f2a44; border-radius:8px; overflow:hidden}
-    .meter > span{display:block; height:100%; background:linear-gradient(90deg, #60a5fa, #34d399); width:50%}
-
-    .sticky-footer{position:sticky; bottom:0; background:linear-gradient(180deg, #0b1222cc, #0b1222); border-top:1px solid #1f2a44; margin-top:8px; padding:12px; border-radius:14px}
-    .foot-grid{display:grid; grid-template-columns:1fr auto auto; gap:8px; align-items:center}
-
-    .mini{font-size:12px}
-    .floating-btn {position: fixed;right: 12px;bottom: 12px;z-index: 1000;padding: 10px 14px;background: linear-gradient(180deg,#12325a 0%,#0d2545 100%);
-    border: 1px solid #1e3a5f;border-radius: 12px;color: #e5e7eb;font-weight: 600;cursor: pointer;box-shadow: 0 4px 12px rgba(0,0,0,.4);}
-    .floating-btn:hover { filter: brightness(1.1); }
+.pitch-btn.selected {
+  background: #000;
+  color: #fff;
+}
   </style>
 </head>
 <body>
-  <div class="app">
-    <!-- 左：總覽 -->
-    <aside class="panel stack">
+  <div class="wrap">
+    <div class="panel">
+      <canvas id="field" width="1280" height="720"></canvas>
+    </div>
+
+    <div class="panel sidebar">
       <div>
-        <h1>🏡 希望旅程</h1>
-        <div class="sub">塞內加爾球星 Sadio Mané 的人生故事，見證 ~在球場外，為家鄉創造希望的力量，你也可以做到。</div>
-      </div>
-
-      <div class="kpi">
-        <div class="card">
-          <div class="label">可用資金</div>
-          <div class="money" id="money">$0</div>
+        <div class="score">
+          <div class="box" id="inning">Inning: 1 (Top)</div>
+          <div class="box" id="scoreboard">Home 0 - 0 Away</div>
         </div>
-        <div class="card">
-          <div class="label">月份／週期</div>
-          <div class="val"><span id="month">1</span> / <span id="year">1</span>年</div>
-        </div>
-        <div class="card">
-          <div class="label">月收入（職涯）</div>
-          <div class="val" id="income">$0</div>
-        </div>
-        <div class="card">
-          <div class="label">社群信任</div>
-          <div class="val" id="trust">50</div>
+        <div class="row" style="margin-top:8px">
+          <div class="small">Outs: <span id="outs">0</span></div>
+          <div class="small">Runners: <span id="runners">—</span></div>
+          <div class="small">Count: <span id="count">0-0</span></div>
         </div>
       </div>
 
-      <div class="card">
-        <div class="row" style="justify-content:space-between">
-          <div>
-            <div class="label">再前進一點</div>
-            <div class="progress" aria-label="影響力進度">
-              <div class="bar" id="impactBar"></div>
-            </div>
-          </div>
-          <div class="pill" id="impactScore">0 分</div>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="label">所見的需要</div>
-        <div class="statrow">
-          <div>
-            教育
-            <div class="meter"><span id="eduMeter" style="width:20%"></span></div>
-          </div>
-          <div>
-            醫療
-            <div class="meter"><span id="healthMeter" style="width:20%"></span></div>
-          </div>
-          <div>
-            用水
-            <div class="meter"><span id="waterMeter" style="width:20%"></span></div>
-          </div>
-          <div>
-            就業
-            <div class="meter"><span id="jobsMeter" style="width:20%"></span></div>
-          </div>
-          <div>
-            體育
-            <div class="meter"><span id="sportsMeter" style="width:20%"></span></div>
-          </div>
-          <div>
-            運行
-            <div class="meter"><span id="maintMeter" style="width:50%"></span></div>
-          </div>
-        </div>
-      </div>
-
-      <div class="row">
-        <button class="btn btn-ghost" id="saveBtn">💾 主動休息</button>
-        <button class="btn btn-ghost" id="loadBtn">📂 載入</button>
-        <button class="btn btn-warn" id="resetBtn">🗑️ 遊戲可重來</button>
-      </div>
-    </aside>
-
-    <!-- 中：情境 / 事件卡 -->
-    <main class="panel">
-      <div class="row" style="justify-content:space-between; align-items:flex-end">
+      <div class="controls">
         <div>
-          <h1>📜 本月事件</h1>
-          <div class="sub">根據事件做抉擇，你的決定影響著所看見的需要與財務。</div>
+  <label>投球類型（Pitch type）</label>
+  <div id="pitchButtons" style="display:flex;gap:6px;margin-top:4px">
+    <button class="btn pitch-btn" data-pitch="fast">快速球</button>
+    <button class="btn pitch-btn" data-pitch="slider">滑球</button>
+    <button class="btn pitch-btn" data-pitch="curve">曲球</button>
+    <button class="btn pitch-btn" data-pitch="change">變速球</button>
         </div>
-        <div class="pill" id="villageTag">🏘️ 家鄉：未命名</div>
-      </div>
 
-      <div class="cards" id="eventList" aria-live="polite"></div>
-
-      <div class="sticky-footer" id="footerBox">
-       <div class="foot-grid">
-        <div class="mini muted">
-      提示：每個月會自動結算運行成本與帶來的長期收益。社群信任會影響募資與志工參與。
-        </div>
-      <button class="btn" id="skipBtn">➡️ 禱告</button>
-     <button class="btn btn-acc" id="nextBtn">✅ 行動</button>
-  </div>
-      </div>
-    </main>
-
-    <button id="toggleFooter" class="floating-btn" style="display:none;">📌 行動</button>
-
-    <!-- 右：專案資源庫 -->
-    <aside class="panel right stack">
-      <div class="row" style="justify-content:space-between; align-items:flex-end">
         <div>
-          <h1>🧭 專案選單</h1>
-          <div class="sub">選擇想行動的在地專案（可重複建置在各地）。</div>
+          <label>瞄準（左右）</label>
+          <input id="aim" type="range" min="-1" max="1" step="0.01" value="0">
         </div>
-        <button class="btn" id="renameBtn">✏️ 設定家鄉名稱</button>
+
+        <div>
+          <label>球速 / 力道（Power）</label>
+          <input id="power" type="range" min="0.4" max="1.2" step="0.01" value="0.95">
+        </div>
+
+        <div style="display:flex;gap:8px">
+          <button id="pitchBtn" class="btn">投球 (Space)</button>
+          <button id="swingBtn" class="btn" style="background:#22c55e">揮棒 (K / 拖曳)</button>
+        </div>
+
+        <div>
+          <label>模式</label>
+          <select id="mode">
+            <option value="ai_vs_player">我（打者） vs AI（投手/守備）</option>
+            <option value="player_vs_ai">我（投手/守備） vs AI（打者）</option>
+            <option value="ai_vs_ai">AI 自動比賽（觀察）</option>
+            <option value="local_two">本機雙人（傳機）</option>
+          </select>
+        </div>
+
+        <div class="row">
+          <button id="nextBat" class="btn" style="background:#6ee7b7">下一個打者</button>
+          <button id="reset" class="btn" style="background:#ef4444">重置比賽</button>
+        </div>
+
+        <div class="row">
+          <label>加速比賽</label>
+          <input id="speed" type="range" min="0.2" max="2" step="0.1" value="1">
+        </div>
+
+        <div>
+          <label>畫風</label>
+          <select id="artStyle"><option value="flat">扁平 / 現代</option><option value="pixel">像素風</option></select>
+        </div>
+
+        <div>
+          <label>觸控 / 拖曳揮棒</label>
+          <div class="touch-control">
+            <button id="toggleTouch" class="btn" style="background:#60a5fa">開啟觸控</button>
+            <span class="tiny">（手機觸控：拖曳以決定揮棒角度與力度）</span>
+          </div>
+        </div>
+
       </div>
 
-      <div class="cards" id="projectList"></div>
-    </aside>
+      <div>
+        <div class="small muted">操作提示：按 Space 投球，按 K 揮棒或於畫面拖曳（開啟觸控後）。投手可選瞄準、球種與球速。模式可切換成本機雙人。</div>
+        <div class="panel-scroll log" id="log">遊戲初始化中…</div>
+      </div>
+
+      <div class="panel" style="margin-top:6px">
+        <div class="tiny">球員養成 / 球隊管理（簡易介面）</div>
+        <div id="teamPanel" class="panel-scroll"></div>
+        <div id="managementPanel" style="margin-top:8px">
+          <div class="stat">資金: <span id="money">1000000</span></div>
+          <div style="margin-top:6px">
+            <button class="light-btn" id="tradeBtn">交易球員（-100,000）</button>
+            <button class="light-btn" id="signBtn">簽下自由球員（-200,000）</button>
+            <button class="light-btn" id="listBtn">顯示名單</button>
+            <button class="light-btn" id="saveBtn">儲存球隊</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <footer class="muted">整合修正版：保留玩家操作（打擊/投球）為主，AI 承擔對方打擊與守備。若要微調命中率或球種效果，可告訴我數字偏好。</footer>
   </div>
 
-  <script>
-    // 遊戲核心狀態
-    const Game = {
-      month: 1,
-      year: 1,
-      money: 1, // 初始資金
-      baseIncome: 20000, // 每月職涯收入（可想像為合約與代言）
-      trust: 50, // 0-100
-      metrics: { edu:20, health:20, water:20, jobs:20, sports:20, maint:50 }, // 0-100
-      villageName: "未命名",
-      projects: [], // 建置中的專案
-      history: [], // 事件紀錄
-    };
+<script>
+/* ------------------------
+   Integrated Baseball Prototype (fixed counts & integration)
+   - Player operates batting/pitching depending on mode
+   - AI handles opponent batting & fielding
+   - Proper ball/strike count, walks, strikeouts, outs, inning switching
+   ------------------------ */
 
-    // 專案藍圖（可自由擴充）
-    const PROJECT_CATALOG = [
-      {
-        id:"school", name:"📚 小學翻修", cost: 90000, monthlyUpkeep: 4000,
-        effects:{ edu:+8, jobs:+1, maint:-1 }, longTerm:"提升入學率與師資意願"
-      },
-      {
-        id:"clinic", name:"🏥 基礎診療站", cost: 120000, monthlyUpkeep: 6000,
-        effects:{ health:+10, jobs:+1, maint:-2 }, longTerm:"降低可避免的疾病風險"
-      },
-      {
-        id:"well", name:"🚰 深水井與淨水", cost: 70000, monthlyUpkeep: 2000,
-        effects:{ water:+12, health:+2, maint:-1 }, longTerm:"改善用水，減少取水時間"
-      },
-      {
-        id:"academy", name:"⚽ 少年足球訓練中心", cost: 60000, monthlyUpkeep: 3000,
-        effects:{ sports:+10, edu:+2, jobs:+1, maint:-1 }, longTerm:"以運動帶動向上與凝聚"
-      },
-      {
-        id:"micro", name:"💼 微型創業基金", cost: 50000, monthlyUpkeep: 0,
-        effects:{ jobs:+8, trust:+3 }, longTerm:"支持小店與家庭生計"
-      },
-      {
-        id:"solar", name:"🔆 太陽能路燈", cost: 40000, monthlyUpkeep: 1000,
-        effects:{ trust:+2, jobs:+1, maint:+1 }, longTerm:"提高夜間安全與活動"
-      },
-  {
-    id:"communityMeal", name:"🍲 社區免費餐會", cost: 20000, monthlyUpkeep: 3000,
-    effects:{ trust:+8, maint:+2 }, longTerm:"提供弱勢餐食，增進社群關係"
-  },
-  {
-    id:"youthClub", name:"🏀 青少年週末活動", cost: 30000, monthlyUpkeep: 2000,
-    effects:{ edu:+5, sports:+4, trust:+4 }, longTerm:"帶領青少年正向活動，建立信任"
-  },
-  {
-    id:"elderVisit", name:"👵 長者關懷探訪", cost: 15000, monthlyUpkeep: 1000,
-    effects:{ trust:+6, maint:+1 }, longTerm:"探訪長者，傳遞關懷與陪伴"
-  },
-  {
-    id:"afterSchool", name:"📚 放學輔導班", cost: 40000, monthlyUpkeep: 2500,
-    effects:{ edu:+8, trust:+3 }, longTerm:"輔導弱勢學生，提升學習與信任"
-  },
-  {
-    id:"healthCheck", name:"🩺 社區健康檢查", cost: 50000, monthlyUpkeep: 3000,
-    effects:{ health:+8, trust:+4 }, longTerm:"提供基本健康檢查，增強社群健康意識"
-  },
-  {
-    id:"musicMinistry", name:"🎵 社區音樂服事", cost: 10000, monthlyUpkeep: 500,
-    effects:{ trust:+3, edu:+2 }, longTerm:"透過音樂帶來祝福與社群凝聚"
-  },
-  {
-    id:"workshopSkills", name:"🛠️ 社區技能工作坊", cost: 35000, monthlyUpkeep: 2000,
-    effects:{ jobs:+5, edu:+4, trust:+3 }, longTerm:"教導生活與工作技能，提升自立能力"
-  },
-  {
-    id:"cleanUpDay", name:"🧹 社區清潔日", cost: 10000, monthlyUpkeep: 500,
-    effects:{ maint:+5, trust:+2 }, longTerm:"組織社區清潔活動，改善居住環境"
-  },
-  {
-    id:"charityDrive", name:"🎁 社區物資捐贈", cost: 25000, monthlyUpkeep: 1000,
-    effects:{ trust:+6, maint:+1 }, longTerm:"收集與分發物資給有需要的人"
-  },
-  {
-    id:"storyTime", name:"📖 社區親子說故事", cost: 8000, monthlyUpkeep: 500,
-    effects:{ edu:+3, trust:+3 }, longTerm:"透過親子故事活動建立良好社區互動"
-  },
-      {
-    id:"streetArt", name:"🎨 街頭藝術計畫", cost: 40000, monthlyUpkeep: 500,
-    effects:{ trust:+5, edu:+2 }, longTerm:"美化社區環境，吸引觀光與創意人才"
-  },
-  {
-    id:"recycleHub", name:"♻️ 社區資源回收中心", cost: 50000, monthlyUpkeep: 1000,
-    effects:{ maint:+3, trust:+2 }, longTerm:"提升環保意識，減少浪費"
-  },
-  {
-    id:"techLab", name:"💻 創客實驗室", cost: 90000, monthlyUpkeep: 2500,
-    effects:{ edu:+8, jobs:+5, trust:+3 }, longTerm:"培養科技技能與創業能力"
-  },
-  {
-    id:"elderCare", name:"👵 長者關懷中心", cost: 80000, monthlyUpkeep: 1500,
-    effects:{ trust:+6, maint:+1 }, longTerm:"提升社區關懷與老人福祉"
-  },
-  {
-    id:"urbanGarden", name:"🌿 都市共享花園", cost: 30000, monthlyUpkeep: 500,
-    effects:{ edu:+2, trust:+3, maint:+2 }, longTerm:"改善城市綠化與社群互動"
-  },
-  {
-    id:"culturalFest", name:"🎭 社區文化節", cost: 60000, monthlyUpkeep: 2000,
-    effects:{ trust:+8, edu:+2 }, longTerm:"促進文化交流與社群凝聚"
-  },
-  {
-    id:"bikeLane", name:"🚴 安全自行車道", cost: 70000, monthlyUpkeep: 1500,
-    effects:{ maint:+4, trust:+3 }, longTerm:"鼓勵低碳運輸與健康生活"
-  },
-  {
-    id:"emergencyKit", name:"🧰 災害應變物資庫", cost: 50000, monthlyUpkeep: 1000,
-    effects:{ maint:+5, trust:+2 }, longTerm:"提升社區韌性與緊急應變能力"
-  },
-  {
-    id:"startupFund", name:"🚀 青年創業基金", cost: 100000, monthlyUpkeep: 0,
-    effects:{ jobs:+10, trust:+4 }, longTerm:"支持年輕創業者，刺激經濟活力"
-  },
-  {
-    id:"solarFarm", name:"☀️ 小型太陽能農場", cost: 120000, monthlyUpkeep: 3000,
-    effects:{ trust:+3, maint:+2, jobs:+2 }, longTerm:"生產再生能源，改善環境與就業"
+// canvas setup
+const canvas = document.getElementById('field');
+const ctx = canvas.getContext('2d');
+let W = canvas.width, H = canvas.height;
+
+// Game state
+const GAME = {
+  inning: 1,
+  top: true,
+  outs: 0,
+  score: {home:0, away:0},
+  bases: [null,null,null], // objects: {team:'home'|'away', idx:playerIdx}
+  count: {balls:0, strikes:0},
+  lineupIdx: {home:0, away:0},
+  battingTeam: 'away', // who is batting now
+  fieldingTeam: 'home',
+  rngSeed: Math.random()*10000,
+  speed: 1,
+  artStyle: 'flat',
+  touchEnabled: false,
+  announcer: true
+};
+
+// Team & players
+function makeTeam(name){
+  const players = [];
+  for(let i=0;i<9;i++){
+    players.push({
+      id: i,
+      name: `${name}#${i+1}`,
+      contact: Math.round((Math.random()*0.35+0.45)*100)/100, // ~0.45-0.8
+      power: Math.round((Math.random()*0.5+0.3)*100)/100,
+      speed: Math.round((Math.random()*0.5+0.4)*100)/100,
+      field: Math.round((Math.random()*0.5+0.4)*100)/100,
+      xp: 0, level: 1
+    });
   }
-);
+  return {name, players};
+}
+const AWAY = makeTeam('Away');
+const HOME = makeTeam('Home');
 
-    // 隨機事件池
-    const EVENTS = [
-      {
-        id:"press",
-        text:"媒體關注你的家鄉計畫，若接受專訪可提升信任，但需贊助在地活動。",
-        choices:[
-          {label:"接受：贊助$10,000，信任+8", apply:s=>{s.money-=10000; s.trust=Math.min(100,s.trust+8)}},
-          {label:"婉拒：無花費，信任-3", apply:s=>{s.trust=Math.max(0,s.trust-3)}}
-        ]
-      },
-      {
-        id:"flood",
-        text:"暴雨造成道路受損，若立即修補可避免運行惡化。",
-        choices:[
-          {label:"緊急修補：花$20,000，運行+6", apply:s=>{s.money-=20000; s.metrics.maint=Math.min(100,s.metrics.maint+6)}},
-          {label:"暫緩：省錢但運行-6", apply:s=>{s.metrics.maint=Math.max(0,s.metrics.maint-6)}}
-        ]
-      },
-      {
-        id:"sponsor",
-        text:"品牌邀請公益聯名，若參與可增加月收入但需每月投入志工時數（降低運行壓力）。",
-        choices:[
-          {label:"參與：月收入+$10,000，運行+2", apply:s=>{s.baseIncome+=10000; s.metrics.maint=Math.min(100,s.metrics.maint+2)}},
-          {label:"不參與：保持現狀", apply:s=>{}}
-        ]
-      },
-      {
-        id:"match",
-        text:"本月賽事表現出色，獲得比賽獎金$30,000，是否全數捐入基金？",
-        choices:[
-          {label:"全數投入公益（+信任5）", apply:s=>{s.money+=30000; s.trust=Math.min(100,s.trust+5)}},
-          {label:"保留一半（+現金15,000）", apply:s=>{s.money+=15000}},
-          {label:"自行運用（無變化）", apply:s=>{}}
-        ]
-      },
-    ];
+let USER_TEAM = { money: 1000000, roster: HOME.players };
 
-    // 工具
-    const $ = sel => document.querySelector(sel);
-    const $$ = sel => document.querySelectorAll(sel);
-    const fmt = n => "$"+ n.toLocaleString();
+// UI refs
+const pitchBtn = document.getElementById('pitchBtn');
+const swingBtn = document.getElementById('swingBtn');
+const aimEl = document.getElementById('aim');
+const powerEl = document.getElementById('power');
+const pitchTypeEl = document.getElementById('pitchType');
+const modeEl = document.getElementById('mode');
+const nextBatBtn = document.getElementById('nextBat');
+const resetBtn = document.getElementById('reset');
+const speedEl = document.getElementById('speed');
+const logEl = document.getElementById('log');
+const artStyleEl = document.getElementById('artStyle');
+const toggleTouchBtn = document.getElementById('toggleTouch');
+const teamPanel = document.getElementById('teamPanel');
+const moneyEl = document.getElementById('money');
 
-    // 狀態渲染
-    function renderState(){
-      $('#money').textContent = fmt(Game.money);
-      $('#income').textContent = fmt(Game.baseIncome);
-      $('#month').textContent = Game.month;
-      $('#year').textContent = Game.year;
-      $('#trust').textContent = Game.trust;
-      $('#villageTag').textContent = `🏘️ 家鄉：${Game.villageName}`;
-
-      // 影響分數（簡化：各指標平均 + 信任加權）
-      const m = Game.metrics; const avg = (m.edu+m.health+m.water+m.jobs+m.sports+m.maint)/6;
-      const impact = Math.round(avg*0.7 + Game.trust*0.3);
-      const bar = Math.max(0, Math.min(100, impact));
-      $('#impactBar').style.width = bar + '%';
-      $('#impactScore').textContent = impact + ' 分';
-
-      // 指標條
-      $('#eduMeter').style.width = m.edu+'%';
-      $('#healthMeter').style.width = m.health+'%';
-      $('#waterMeter').style.width = m.water+'%';
-      $('#jobsMeter').style.width = m.jobs+'%';
-      $('#sportsMeter').style.width = m.sports+'%';
-      $('#maintMeter').style.width = m.maint+'%';
-    }
-
-    // 專案渲染
-    function renderProjects(){
-      const box = $('#projectList');
-      box.innerHTML = '';
-
-      PROJECT_CATALOG.forEach(p=>{
-        const el = document.createElement('div');
-        el.className = 'card project';
-        el.innerHTML = `
-          <div>
-            <h3>${p.name}</h3>
-            <div class="muted mini">一次成本：${fmt(p.cost)}｜每月維護支出：${fmt(p.monthlyUpkeep)}<br>${p.longTerm}</div>
-            <div class="row" style="gap:6px; flex-wrap:wrap; margin-top:8px">
-              ${Object.entries(p.effects).map(([k,v])=>`<span class="tag">${labelOf(k)} ${v>0?'+':''}${v}</span>`).join('')}
-            </div>
-          </div>
-          <div class="stack" style="align-items:end">
-            <button class="btn btn-acc" ${Game.money<p.cost?'disabled':''}>投資</button>
-            <span class="pill mini">${Game.money<p.cost?'資金不足':'可建置'}</span>
-          </div>
-        `;
-        el.querySelector('button').onclick=()=>buildProject(p);
-        box.appendChild(el);
-      });
-
-      // 已建置清單
-      if(Game.projects.length){
-        const list = document.createElement('div');
-        list.className='card';
-        list.innerHTML = `<h3>已建置與運行</h3>`;
-        Game.projects.forEach((proj,i)=>{
-          const row = document.createElement('div');
-          row.className='row';
-          row.style.justifyContent='space-between';
-          row.style.marginTop='6px';
-          row.innerHTML = `<div class="mini">${proj.name} <span class="muted">（第${proj.builtAt.year}年${proj.builtAt.month}月）</span></div>
-                           <div class="pill mini">運行：${fmt(proj.monthlyUpkeep)}</div>`;
-          list.appendChild(row);
-        })
-        box.appendChild(list);
-      }
-    }
-
-    function labelOf(k){
-      return ({edu:'教育',health:'醫療',water:'用水',jobs:'就業',sports:'體育',maint:'運行',trust:'信任'})[k]||k;
-    }
-
-    function buildProject(p){
-      if(Game.money < p.cost) return;
-      Game.money -= p.cost;
-      Game.projects.push({...p, builtAt:{year:Game.year, month:Game.month}});
-      // 即時信任微增（透明度）
-      Game.trust = Math.min(100, Game.trust + (p.effects.trust?Math.max(1,p.effects.trust):1));
-      renderState(); renderProjects();
-      toast(`已建置：${p.name}，家鄉看見了你的行動 💚`);
-    }
-
-    // 事件生成與渲染
-    function drawEvents(){
-      const box = $('#eventList');
-      box.innerHTML = '';
-      const pool = pick(EVENTS, 2 + (Math.random()>0.7?1:0));
-      pool.forEach(e=>{
-        const card = document.createElement('div');
-        card.className = 'card';
-        card.innerHTML = `<h3>：${emojiFor(e.id)} ${e.text}</h3>`;
-        e.choices.forEach(c=>{
-          const btn = document.createElement('button');
-          btn.className='btn'; btn.textContent=c.label;
-          btn.onclick=()=>{ c.apply(Game); renderState(); disableCard(card); };
-          card.appendChild(btn);
-          card.appendChild(document.createTextNode(' '));
-        });
-        box.appendChild(card);
-      });
-    }
-    function emojiFor(id){
-      return ({press:'📰', flood:'🌧️', sponsor:'🤝', match:'🥇'})[id] || '📌';
-    }
-    function disableCard(card){
-      [...card.querySelectorAll('button')].forEach(b=>{b.disabled=true; b.classList.add('btn-ghost')});
-      const note = document.createElement('div'); note.className='muted mini'; note.textContent='已選擇'; card.appendChild(document.createElement('br')); card.appendChild(note);
-    }
-
-    // 月結算
-    function settleMonth(skipWarnings=false){
-      // 收入
-      Game.money += Game.baseIncome;
-      // 專案運行成本
-      const upkeep = Game.projects.reduce((a,p)=>a+p.monthlyUpkeep,0);
-      Game.money -= upkeep;
-      // 長期效果疊加
-      Game.projects.forEach(p=>{
-        for(const [k,v] of Object.entries(p.effects)){
-          if(k==='trust'){ Game.trust = clamp(Game.trust + v*0.2,0,100); }
-          else { Game.metrics[k] = clamp(Game.metrics[k] + v*0.5, 0, 100); }
-        }
-      });
-      // 運行不足懲罰
-      if(Game.metrics.maint < 30){
-        Game.trust = Math.max(0, Game.trust - 4);
-        Game.metrics.edu = Math.max(0, Game.metrics.edu - 2);
-        Game.metrics.health = Math.max(0, Game.metrics.health - 2);
-      }
-      // ⚠️ 新增這行：正常結算 → 扣運行 10
-     Game.metrics.maint = Math.max(0, Game.metrics.maint - 10);
-      // 現金不足警示
-      if(Game.money < 0 && !skipWarnings){
-        alert('注意：現金流為負！請增加收入或減少新建專案。');
-      }
-
-      // 時間遞進
-      Game.month++; if(Game.month>12){ Game.month=1; Game.year++; }
-      renderState(); renderProjects(); drawEvents();
-      toast('已結算本月：收入與維運已體現在指標');
-      saveAuto();
-    }
-    function skipToSettle(){
-  let roll = Math.floor(Math.random() * 10); // 0~9
-  let finalIncome;
-  switch(roll){
-    case 0: // 10%
-      finalIncome = 0; 
-      Game.baseIncome += 9999; // 永久加職涯月收入
-      toast('✨ 感恩！你的職涯月收入永久增加 +9999 ✨');
-      break;
-    case 1: 
-      finalIncome = Game.baseIncome / 20;
-      break;
-    case 2: 
-      finalIncome = Game.baseIncome / 10;
-      break;
-    case 3: 
-      finalIncome = Game.baseIncome / 6;
-      break;
-    case 4: 
-      finalIncome = Game.baseIncome / 7;
-      break;
-    case 5: 
-      finalIncome = Game.baseIncome / 11;
-      break;
-    case 6: 
-      finalIncome = Game.baseIncome / 12;
-      break;
-    case 7: 
-      finalIncome = Game.baseIncome / 15;
-      break;
-    case 8: 
-      finalIncome = Game.baseIncome / 17;
-      break;
-    case 9: 
-      finalIncome = Game.baseIncome / 18;
-      break;
-  }
-  // 取整數，避免小數點
-  finalIncome = Math.floor(finalIncome);
-
-  Game.money += finalIncome;
-
-  if (roll !== 0) {
-    toast(`➡️ 你選擇禱告，本月收入為 ${finalIncome}（隨機結果）`);
-  }
-  // 不扣運行、不算 upkeep，只推進時間
-  Game.month++; 
-  if(Game.month > 12){ 
-    Game.month = 1; 
-    Game.year++; 
-  }
-
-  renderState(); 
-  renderProjects(); 
-  drawEvents();
-  saveAuto();
+function uiUpdate(){
+  document.getElementById('inning').innerText = `Inning: ${GAME.inning} (${GAME.top? 'Top' : 'Bottom'})`;
+  document.getElementById('outs').innerText = GAME.outs;
+  document.getElementById('count').innerText = `${GAME.count.balls}-${GAME.count.strikes}`;
+  document.getElementById('scoreboard').innerText = `Home ${GAME.score.home} - ${GAME.score.away} Away`;
+  const runners = GAME.bases.map((b,i)=> b!==null ? `${b.team[0].toUpperCase()}${b.idx+1}` : '-').join(' ');
+  document.getElementById('runners').innerText = runners;
+  teamPanel.innerHTML = renderTeamPanel();
+  moneyEl.innerText = USER_TEAM.money;
 }
 
-    // 儲存 / 載入
-    function save(name='autosave'){
-      localStorage.setItem('hometown_saver_'+name, JSON.stringify(Game));
-      toast('已儲存進度');
-    }
-    function load(name='autosave'){
-      const raw = localStorage.getItem('hometown_saver_'+name);
-      if(!raw){ toast('找不到存檔'); return; }
-      const data = JSON.parse(raw);
-      Object.assign(Game, data);
-      renderState(); renderProjects(); drawEvents();
-      toast('載入成功');
-    }
-    const saveAuto = ()=> save('autosave');
+// logging
+function log(msg){
+  const p = document.createElement('div'); p.innerText = `[${new Date().toLocaleTimeString()}] ${msg}`;
+  logEl.prepend(p);
+  // optionally play announcer sounds later
+}
 
-    // 其他輔助
-    function clamp(n,min,max){ return Math.max(min, Math.min(max, n)); }
-    function pick(arr, n){
-      const pool = [...arr]; const out=[]; while(out.length<n && pool.length){
-        const i = Math.floor(Math.random()*pool.length); out.push(pool.splice(i,1)[0]);
-      } return out;
-    }
-    function toast(msg){
-      const t = document.createElement('div');
-      t.textContent = msg; t.className='pill'; t.style.position='fixed'; t.style.right='18px'; t.style.bottom='18px'; t.style.zIndex=50; t.style.background='#0b1222ee'; t.style.border='1px solid #1f2a44';
-      document.body.appendChild(t); setTimeout(()=>t.remove(), 2200);
-    }
+// RNG
+function rand(){ GAME.rngSeed = (GAME.rngSeed*9301+49297)%233280; return GAME.rngSeed/233280; }
 
-    // 事件綁定
-    $('#nextBtn').onclick = ()=> settleMonth();
-    $('#skipBtn').onclick = ()=> skipToSettle();
-    $('#saveBtn').onclick = ()=> save('slot1');
-    $('#loadBtn').onclick = ()=> load('slot1');
-    $('#resetBtn').onclick = ()=>{ if(confirm('確定要開新局嗎？目前進度將清除。')){ localStorage.removeItem('hometown_saver_slot1'); localStorage.removeItem('hometown_saver_autosave'); location.reload(); } };
-    $('#renameBtn').onclick = ()=>{
-      const name = prompt('請輸入你的家鄉名稱（例如：班巴利、清水村…）', Game.villageName);
-      if(name){ Game.villageName = name.trim().slice(0,20); renderState(); saveAuto(); }
+// Fielding helpers
+function getFielderPositions(cx,cy,size){
+  const spread = size;
+  return {
+    P: {x:cx, y:cy-40}, C: {x:cx, y:cy+spread*0.8},
+    '1B': {x:cx+spread*0.5, y:cy-spread*0.2}, '2B': {x:cx, y:cy+spread*0.0}, '3B': {x:cx-spread*0.5, y:cy-spread*0.2},
+    LF: {x:cx+spread*0.9, y:cy-spread*0.6}, CF: {x:cx, y:cy-spread*0.9}, RF: {x:cx-spread*0.9, y:cy-spread*0.6}
+  };
+}
+const FIELD_POS_TO_IDX = {P:7,C:8,'1B':0,'2B':1,'SS':2,'3B':3,'LF':4,'CF':5,'RF':6};
+
+function fieldBall(fielderPosName, hitType){
+  const teamObj = (GAME.fieldingTeam === 'home') ? HOME : AWAY;
+  const fIdx = FIELD_POS_TO_IDX[fielderPosName] ?? 4;
+  const f = teamObj.players[fIdx];
+  const fieldSkill = f.field;
+  const baseChance = 0.55 * fieldSkill + 0.25; // slightly lower to allow hits sometimes
+  const success = rand() < baseChance;
+  if(!success){ log(`${fielderPosName} 發生失誤`); }
+  return success;
+}
+
+// Pitch & contact resolution (improved balance)
+function resolvePitch(pitch){
+  // Determine whether pitch is in zone -> more accurate if aim near 0 and power sufficient
+  const loc = pitch.aim + (Math.random()-0.5)*0.4;
+  const inZone = Math.abs(loc) < 0.35 && pitch.power > 0.5;
+  const battingTeam = GAME.battingTeam === 'away' ? AWAY : HOME;
+  const batter = battingTeam.players[ GAME.lineupIdx[GAME.battingTeam] ];
+  // determine whether batter will swing (AI)
+  const mode = modeEl.value;
+  let autoSwing = (mode === 'ai_vs_player' && GAME.battingTeam==='away') || (mode==='player_vs_ai' && GAME.battingTeam==='home') || (mode==='ai_vs_ai');
+  let swung=false; let swingTiming=0.5;
+  if(autoSwing){
+    // if ball out of zone: lower swing chance; if in zone: higher
+    const swingProb = Math.max(0.12, Math.min(0.98, batter.contact * (inZone ? 0.95 : 0.45)));
+    swung = rand() < swingProb;
+    swingTiming = 0.35 + rand()*0.6;
+  }
+  return {inZone, swung, swingTiming, batter, loc};
+}
+
+function makeContactExtended(pitch, swingTiming, batter){
+  // base quality from batter contact + timing + pitch difficulty
+  let quality = (batter.contact - 0.5) + (Math.random()-0.5)*0.55 + (0.5 - Math.abs(pitch.aim))*0.5 + (pitch.power-0.85);
+  quality += (0.5 - Math.abs(0.5 - swingTiming)) * 1.0;
+  quality = Math.max(-1, Math.min(1, quality));
+  if(quality < -0.35) return {result:'miss', quality};
+  const powerFactor = batter.power;
+  const base = quality*0.6 + powerFactor*0.8 + rand()*0.5;
+  if(base > 1.4) return {result:'homer', quality};
+  if(base > 0.85) return {result:'triple', quality};
+  if(base > 0.35) return {result:'double', quality};
+  if(base > -0.05) return {result:'single', quality};
+  return {result:'weak', quality};
+}
+
+// Runner animation system
+const RUNNERS = [];
+function animateRunner(start, end, duration, meta){
+  const t0 = performance.now();
+  RUNNERS.push({start,end,duration,t0,meta});
+}
+function updateRunners(){
+  const now = performance.now();
+  for(let i=RUNNERS.length-1;i>=0;i--){
+    const r = RUNNERS[i];
+    const p = Math.min(1, (now - r.t0)/r.duration);
+    r.current = {x: r.start.x + (r.end.x - r.start.x)*p, y: r.start.y + (r.end.y - r.start.y)*p};
+    if(p>=1){
+      if(r.meta && r.meta.onComplete) r.meta.onComplete();
+      RUNNERS.splice(i,1);
+    }
+  }
+}
+
+// Apply play results and properly update counts/out/inning
+function applyPlayExtended(outcome, batterIdx){
+  const batting = GAME.battingTeam === 'away' ? AWAY : HOME;
+  // outcome: miss, weak, single/double/triple/homer
+  if(outcome === 'miss'){
+    GAME.count.strikes += 1;
+    log('揮空或未擊中（計為好球）');
+    if(GAME.count.strikes >= 3){
+      GAME.outs += 1;
+      giveXP(batting.players[batterIdx], 5);
+      log('三振出局');
+      resetCount();
+      advanceBatter();
+    }
+  } else if(outcome === 'weak'){
+    GAME.outs += 1;
+    log('弱擊出局（滾地球）');
+    giveXP(batting.players[batterIdx], 3);
+    resetCount();
+    advanceBatter();
+  } else if(['single','double','triple','homer'].includes(outcome)){
+    // hits
+    const baseIdxAdvance = {single:1,double:2,triple:3,homer:4}[outcome];
+    let runs = 0;
+    for(let i=2;i>=0;i--){
+      const runner = GAME.bases[i];
+      if(runner){
+        const newBaseIndex = i + baseIdxAdvance;
+        if(newBaseIndex >= 3){
+          runs++;
+          GAME.bases[i] = null;
+        } else {
+          const start = baseCoord(i), end = baseCoord(newBaseIndex);
+          animateRunner(start,end,700,{onComplete:()=>{}});
+          GAME.bases[newBaseIndex] = runner;
+          GAME.bases[i] = null;
+        }
+      }
+    }
+    if(outcome === 'homer'){
+      runs++; // batter scores
+    } else {
+      GAME.bases[baseIdxAdvance-1] = {team: GAME.battingTeam, idx: batterIdx};
+    }
+    if(GAME.battingTeam === 'away') GAME.score.away += runs; else GAME.score.home += runs;
+    log(`${outcome}！跑回 ${runs} 分`);
+    giveXP(batting.players[batterIdx], 10 + runs*2);
+    resetCount();
+    advanceBatter();
+  }
+  // after play, check outs -> if >=3 end half inning
+  if(GAME.outs >= 3) endHalfInning();
+  uiUpdate();
+}
+
+function baseCoord(baseIndex){
+  const cx = W/2, cy = H/2; // 內野中心
+  const size = 300;          // 方形內野寬度的一半
+
+  // baseIndex: 0=Home, 1=1B, 2=2B, 3=3B
+  const posMap = [
+    { x: cx,          y: cy + size/2 }, // Home Plate 下方
+    { x: cx + size/2, y: cy },          // 1B 右側
+    { x: cx,          y: cy - size/2 }, // 2B 上方
+    { x: cx - size/2, y: cy }           // 3B 左側
+  ];
+
+  return posMap[baseIndex] || {x:cx, y:cy};
+}
+
+function giveXP(player, amount){
+  player.xp += amount;
+  while(player.xp >= xpForNext(player.level)){
+    player.xp -= xpForNext(player.level);
+    player.level++; player.contact = Math.min(0.99, player.contact + 0.02); player.power = Math.min(0.99, player.power + 0.02);
+    log(`${player.name} 升級到 Lv.${player.level}`);
+  }
+}
+function xpForNext(lv){ return 20 + lv*10; }
+
+function endHalfInning(){
+  GAME.outs = 0;
+  resetCount();
+  GAME.bases = [null,null,null];
+  if(GAME.top){
+    GAME.top = false;
+    GAME.fieldingTeam = GAME.battingTeam;
+    GAME.battingTeam = (GAME.battingTeam==='away' ? 'home' : 'away');
+  } else {
+    GAME.top = true; GAME.inning += 1;
+    GAME.fieldingTeam = GAME.battingTeam;
+    GAME.battingTeam = (GAME.battingTeam==='away' ? 'home' : 'away');
+  }
+  log('換半局 — ' + (GAME.top ? '上半' : '下半'));
+  uiUpdate();
+}
+
+// advance lineup
+function advanceBatter(){ GAME.lineupIdx[GAME.battingTeam] = (GAME.lineupIdx[GAME.battingTeam] + 1) % 9; }
+
+// count helpers
+function resetCount(){ GAME.count.balls = 0; GAME.count.strikes = 0; }
+function addBallAndCheckWalk(){
+  GAME.count.balls += 1;
+  if(GAME.count.balls >= 4){
+    // walk
+    log('四壞保送');
+    // advance batter to first (force)
+    const batterIdx = GAME.lineupIdx[GAME.battingTeam];
+    // shift runners
+    for(let i=2;i>=0;i--){
+      if(GAME.bases[i] && i===2){ // runner on 3rd scores if forced
+        GAME.score[GAME.bases[i].team === 'away' ? 'away' : 'home'] += 1;
+      }
+    }
+    // simple forced advance: push array
+    GAME.bases.unshift({team: GAME.battingTeam, idx: batterIdx});
+    GAME.bases.pop();
+    uiUpdate();
+    resetCount();
+    advanceBatter();
+  }
+}
+function addStrikeAndCheckK(){
+  GAME.count.strikes += 1;
+  if(GAME.count.strikes >= 3){
+    GAME.outs += 1;
+    log('三振出局');
+    const batterIdx = GAME.lineupIdx[GAME.battingTeam];
+    giveXP((GAME.battingTeam==='away'?AWAY:HOME).players[batterIdx], 5);
+    resetCount();
+    advanceBatter();
+    if(GAME.outs >= 3) endHalfInning();
+  }
+}
+
+// Input & touch handling
+let awaitingSwing = false;
+let currentPitch = null;
+let dragStart = null, dragActive = false;
+
+pitchBtn.addEventListener('click', ()=>{ doPitch(); });
+swingBtn.addEventListener('click', ()=>{ doSwingByPlayer(); });
+resetBtn.addEventListener('click', resetGame);
+nextBatBtn.addEventListener('click', ()=>{ advanceBatter(); uiUpdate(); log('手動切換下一打者'); });
+speedEl.addEventListener('input', ()=>{ GAME.speed = Number(speedEl.value); });
+artStyleEl.addEventListener('change', ()=>{ GAME.artStyle = artStyleEl.value; });
+toggleTouchBtn.addEventListener('click', ()=>{ GAME.touchEnabled = !GAME.touchEnabled; toggleTouchBtn.innerText = GAME.touchEnabled ? '關閉觸控' : '開啟觸控'; log('觸控模式 ' + (GAME.touchEnabled?'已開啟':'已關閉')); });
+
+// keyboard
+window.addEventListener('keydown', (e)=>{
+  if(e.code==='Space'){ e.preventDefault(); doPitch(); }
+  if(e.key.toLowerCase()==='k'){ e.preventDefault(); doSwingByPlayer(); }
+});
+
+// touch / drag for swinging
+canvas.addEventListener('pointerdown',(e)=>{
+  if(!GAME.touchEnabled) return;
+  dragStart = {x:e.offsetX, y:e.offsetY}; dragActive = true;
+});
+canvas.addEventListener('pointermove',(e)=>{ /* optional guide */ });
+canvas.addEventListener('pointerup',(e)=>{
+  if(!dragActive) return; dragActive=false;
+  const dx = e.offsetX - dragStart.x; const dy = e.offsetY - dragStart.y;
+  const timing = Math.min(1, Math.max(0, 0.5 + (dx/800)));
+  if(awaitingSwing){
+    awaitingSwing = false;
+    // Player swung
+    const batting = GAME.battingTeam === 'away' ? AWAY : HOME;
+    const batter = batting.players[ GAME.lineupIdx[GAME.battingTeam] ];
+    const outcome = makeContactExtended(currentPitch, timing, batter);
+    handleSwingOutcome(outcome, GAME.lineupIdx[GAME.battingTeam], true);
+  }
+});
+
+// doPitch integrates good/bad ball, and AI automatic responses
+function doPitch(){
+  if(awaitingSwing){ log('等待揮棒...'); return; }
+  // currentpitch includes type/aim/power and a computed inZone
+  const pitch = { type: currentPitchType, aim: Number(aimEl.value), power: Number(powerEl.value) };
+  currentPitch = pitch;
+  const res = resolvePitch(pitch);
+  // If batting side is AI and AI is set to swing, process immediately
+  const mode = modeEl.value;
+  const playerIsPitcher = (mode === 'player_vs_ai' && GAME.battingTeam === 'away') || (mode === 'ai_vs_player' && GAME.battingTeam === 'home') || (mode === 'local_two' && GAME.battingTeam !== getLocalPlayerBattingSide());
+  // Determine if the batter is AI and should swing automatically
+  if( (mode === 'player_vs_ai' && GAME.battingTeam === 'away') || (mode === 'ai_vs_player' && GAME.battingTeam === 'home') || mode === 'ai_vs_ai' ){
+    if(res.swung){
+      const outcome = makeContactExtended(pitch, res.swingTiming, res.batter);
+      handleSwingOutcome(outcome, GAME.lineupIdx[GAME.battingTeam], false);
+    } else {
+      // no swing -> called strike if in zone, else ball
+      if(res.inZone){
+        addStrikeAndCheckK();
+        log('好球（未揮棒）');
+      } else {
+        addBallAndCheckWalk();
+        log('壞球（未揮棒）');
+      }
+      uiUpdate();
+    }
+    return;
+  }
+  // Otherwise, player is batting -> wait for swing input
+  // Or player is pitching and AI batting: allow AI to auto-swing after small delay
+  if((mode === 'player_vs_ai' && GAME.battingTeam === 'home') || (mode === 'ai_vs_player' && GAME.battingTeam === 'away') ){
+    // if AI batting, decide swing quickly
+    if(res.swung){
+      const outcome = makeContactExtended(pitch, res.swingTiming, res.batter);
+      handleSwingOutcome(outcome, GAME.lineupIdx[GAME.battingTeam], false);
+    } else {
+      if(res.inZone){ addStrikeAndCheckK(); log('好球（未揮棒）'); }
+      else { addBallAndCheckWalk(); log('壞球（未揮棒）'); }
+      uiUpdate();
+    }
+    return;
+  }
+  // Otherwise player is batting: set awaitingSwing and allow player to swing or time out
+  awaitingSwing = true;
+  log('投球完成 — 等待揮棒（按 K 或拖曳）');
+  setTimeout(()=>{
+    if(awaitingSwing){
+      awaitingSwing = false;
+      // auto-judge as called ball/strike
+      const res2 = resolvePitch(pitch);
+      if(res2.inZone){ addStrikeAndCheckK(); log('好球（未揮棒）'); }
+      else{ addBallAndCheckWalk(); log('壞球（未揮棒）'); }
+      uiUpdate();
+    }
+  }, 1200 / GAME.speed);
+}
+
+// centralized swing outcome handling
+function handleSwingOutcome(outcome, batterIdx, isPlayerSwing){
+  if(outcome.result === 'miss'){
+    addStrikeAndCheckK();
+    log((isPlayerSwing? '玩家':'AI') + ' 揮空/未擊中');
+  } else if(outcome.result === 'weak'){
+    GAME.outs += 1;
+    log('弱擊出局');
+    giveXP((GAME.battingTeam==='away'?AWAY:HOME).players[batterIdx], 3);
+    resetCount();
+    advanceBatter();
+    if(GAME.outs >= 3) endHalfInning();
+  } else {
+    // hit: single/double/triple/homer
+    applyPlayExtended(outcome.result, batterIdx);
+  }
+  uiUpdate();
+}
+
+// when player presses swing (K)
+function doSwingByPlayer(){
+  if(!awaitingSwing){ log('目前不是揮棒時機'); return; }
+  awaitingSwing = false;
+  const pitch = currentPitch;
+  const timing = 0.45 + (Number(powerEl.value)-0.4)/1.6 * 0.2 + (Math.random()-0.5)*0.25;
+  const batting = GAME.battingTeam === 'away' ? AWAY : HOME;
+  const batter = batting.players[ GAME.lineupIdx[GAME.battingTeam] ];
+  const outcome = makeContactExtended(pitch, timing, batter);
+  handleSwingOutcome(outcome, GAME.lineupIdx[GAME.battingTeam], true);
+}
+
+// reset game
+function resetGame(){
+  GAME.inning = 1; GAME.top = true; GAME.outs = 0; GAME.score = {home:0, away:0};
+  GAME.bases = [null,null,null]; resetCount();
+  GAME.lineupIdx = {home:0, away:0}; GAME.battingTeam = 'away'; GAME.fieldingTeam = 'home';
+  GAME.rngSeed = Math.random()*10000;
+  log('遊戲重置');
+  uiUpdate();
+}
+
+// Drawing
+function drawField(){
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle = '#0b2a1c'; ctx.fillRect(0,0,W,H);
+  const cx = W/2, cy = H*0.55, size = 260;
+  ctx.fillStyle = GAME.artStyle==='pixel' ? '#a78b5b' : '#bda27a';
+  ctx.beginPath(); ctx.moveTo(cx, cy - size); ctx.lineTo(cx + size, cy); ctx.lineTo(cx, cy + size); ctx.lineTo(cx - size, cy); ctx.closePath(); ctx.fill();
+  const bcoords = [ {x:cx+size*0.45, y:cy- size*0.25}, {x:cx, y:cy+size*0.12}, {x:cx - size*0.45, y:cy - size*0.25} ];
+  ctx.fillStyle = '#fff'; bcoords.forEach((b,i)=>{ ctx.fillRect(b.x-12,b.y-12,24,24); });
+  ctx.fillStyle = '#d6b687'; ctx.beginPath(); ctx.arc(cx, cy - 40, 22, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.moveTo(cx, cy+size*0.85); ctx.lineTo(cx+16, cy+size*0.85-12); ctx.lineTo(cx, cy+size*0.85-26); ctx.lineTo(cx-16, cy+size*0.85-12); ctx.closePath(); ctx.fill();
+
+  // draw bases runners
+GAME.bases.forEach((runner,i)=>{
+  if(runner){
+    const pos = baseCoord(i);
+    ctx.fillStyle = '#ffefc2';
+    ctx.beginPath();
+    ctx.arc(pos.x, pos.y, GAME.artStyle==='pixel'?8:14,0,Math.PI*2);
+    ctx.fill();
+    ctx.fillStyle='#073642';
+    ctx.font = (GAME.artStyle==='pixel'?'10px monospace':'14px sans-serif');
+    ctx.fillText(runner.team[0].toUpperCase()+ (runner.idx+1), pos.x-8, pos.y+5);
+  }
+});
+  // animated runners
+  RUNNERS.forEach(r=>{ const p = r.current || r.start; ctx.fillStyle='#ffd9b3'; ctx.beginPath(); ctx.arc(p.x,p.y, GAME.artStyle==='pixel'?7:12,0,Math.PI*2); ctx.fill(); });
+  const fpos = getFielderPositions(cx,cy,size);
+  Object.keys(fpos).forEach(k=>{ const p = fpos[k]; ctx.fillStyle='#cfe7ff'; ctx.font='12px sans-serif'; ctx.fillText(k, p.x-6, p.y-6); });
+  ctx.fillStyle = 'rgba(2,10,20,0.6)'; ctx.fillRect(12,12,360,88);
+  ctx.fillStyle = '#bde4ff'; ctx.font = '18px sans-serif'; ctx.fillText(`Inning ${GAME.inning} ${GAME.top? 'Top':'Bottom'}`, 24,36);
+  ctx.fillText(`Score H:${GAME.score.home} A:${GAME.score.away}`, 24,64);
+  ctx.fillStyle='#cfe7ff'; ctx.font='14px sans-serif'; ctx.fillText(`Outs:${GAME.outs}  B/S:${GAME.count.balls}/${GAME.count.strikes}`, 200,64);
+}
+function loop(){ updateRunners(); drawField(); requestAnimationFrame(loop); }
+
+// Team panel
+function renderTeamPanel(){
+  function renderTeam(team){
+    return `<div style="margin-bottom:8px"><strong>${team.name}</strong><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:6px">` + team.players.map(p=>`<div style="background:rgba(255,255,255,0.02);padding:6px;border-radius:6px"><div style="font-weight:700">${p.name}</div><div class='tiny'>Lv${p.level} XP:${p.xp}/${xpForNext(p.level)}</div><div class='tiny'>C:${p.contact} P:${p.power} S:${p.speed} F:${p.field}</div></div>`).join('') + '</div></div>';
+  }
+  return renderTeam(HOME) + renderTeam(AWAY);
+}
+
+// Management buttons
+document.getElementById('tradeBtn').addEventListener('click', ()=>{
+  if(USER_TEAM.money >= 100000){ USER_TEAM.money -= 100000; USER_TEAM.roster.push({id: USER_TEAM.roster.length, name: '交易球員', contact:0.5, power:0.5, speed:0.5, field:0.5, xp:0, level:1}); log('完成交易：花費 100,000'); uiUpdate(); } else { log('資金不足無法交易'); }
+});
+document.getElementById('signBtn').addEventListener('click', ()=>{
+  if(USER_TEAM.money >= 200000){ USER_TEAM.money -= 200000; USER_TEAM.roster.push({id: USER_TEAM.roster.length, name: '自由球員', contact:0.52, power:0.48, speed:0.5, field:0.5, xp:0, level:1}); log('簽下自由球員：花費 200,000'); uiUpdate(); } else { log('資金不足無法簽約'); }
+});
+document.getElementById('listBtn').addEventListener('click', ()=>{ log('球隊名單：' + USER_TEAM.roster.map(p=>p.name).join(', ')); });
+document.getElementById('saveBtn').addEventListener('click', ()=>{
+  try{ localStorage.setItem('myBaseballTeam', JSON.stringify(USER_TEAM)); log('球隊資料已儲存到 localStorage'); } catch(e){ log('儲存失敗：' + e.message); }
+});
+
+// helper: determine local player batting side in local_two (simple toggle)
+function getLocalPlayerBattingSide(){ // returns 'home' or 'away' representing local player's batting side in local_two
+  // default: local player controls home team batting when mode local_two and it's bottom half
+  return GAME.top ? 'away' : 'home';
+}
+
+// initialize
+resetGame(); uiUpdate(); loop(); log('整合修正版啟動 — Player controls batting/pitching per mode.');
+
+// Expose some functions for quick testing (optional)
+window.doPitch = doPitch;
+window.doSwingByPlayer = doSwingByPlayer;
+window.resetGame = resetGame;
+window.advanceBatter = advanceBatter;
+
+let batter = { contact: 70, power: 60 }; // 打者：contact命中、power長打
+let pitcher = { control: 65, strike: 75 }; // 投手：control控球、strike三振能力
+
+function calculateHitProb(batter, pitcher) {
+    // 基礎機率
+    let prob = {
+        strikeout: 0.20,
+        flyball: 0.30,
+        groundball: 0.30,
+        line: 0.2
     };
 
-    // 初始化
-    (function init(){
-      renderState(); renderProjects(); drawEvents();
-      // 初始提示
-      setTimeout(()=>toast('提示：禱告很重要，你要安靜你的心，凡事感恩會使你增強心理健康，如提升幸福感、減輕焦慮與抑鬱'), 600);
-    })();
+    // 能力差
+    const diff = (batter.contact + batter.power) - (pitcher.control + pitcher.strike);
 
+    // 調整倍率：差距越大 → 打者越容易成功
+    const adjust = diff / 200; // 差距/200 讓影響合理
 
-  </script>
+    prob.strikeout = Math.max(0.05, prob.strikeout - adjust); // 最少5%
+    prob.flyball = Math.min(0.4, prob.flyball - adjust/2);
+    prob.groundball = Math.min(0.5, prob.groundball - adjust/2);
+    prob.line = 1 - (prob.strikeout + prob.flyball + prob.groundball);
+
+    return prob;
+}
+
+function determineHitType(batter, pitcher) {
+    const prob = calculateHitProb(batter, pitcher);
+    const rand = Math.random();
+
+    if (rand < prob.strikeout) return "strikeout";
+    else if (rand < prob.strikeout + prob.flyball) return "flyball";
+    else if (rand < prob.strikeout + prob.flyball + prob.groundball) return "groundball";
+    else return "line"; // 安打
+}
+
+function handleFlyball(baseRunners, hitDistance) {
+    // 如果擊出外野深遠球 (hitDistance 大於某值) -> 全壘打
+    if (hitDistance >= FIELD_HOMERUN_DISTANCE) {
+        return { type: "homerun", score: baseRunners.length + 1, bases: [] };
+    } else {
+        // 一般高飛球 -> 可能出局
+        const outChance = 0.7; // 70% 高飛球會被接殺
+        if (Math.random() < outChance) {
+            return { type: "out", outCount: 1, doublePlay: false };
+        } else {
+            // 安打或安全飛球 (sacrifice fly)
+            // 僅二三壘跑者得分
+            let score = 0;
+            const newBases = baseRunners.map(runner => {
+                if (runner.base >= 2) { score++; return null; } // 得分
+                return runner; // 留在壘上
+            });
+            return { type: "sacfly", score, bases: newBases };
+        }
+    }
+}
+
+function handleGroundball(baseRunners) {
+    // 基本假設: 1出局 -> 可能形成雙殺
+    let outCount = 1;
+    let doublePlay = false;
+
+    // 如果一壘有跑者 & 滾地球打向內野，判定雙殺
+    if (baseRunners.some(r => r.base === 1) && Math.random() < 0.25) {
+        outCount = 2;
+        doublePlay = true;
+        baseRunners = baseRunners.filter(r => r.base !== 1); // 一壘跑者出局
+    }
+
+    // 移動其他壘上跑者
+    baseRunners = baseRunners.map(runner => {
+        if (runner.base === 1) return null; // 已出局
+        runner.base += 1; // 前進一壘
+        return runner;
+    }).filter(r => r !== null);
+
+    return { type: "groundball", outCount, doublePlay, bases: baseRunners };
+}
+
+function handleStrikeout() {
+    // 單純出局，無壘上跑者前進
+    return {
+        type: "strikeout",
+        outCount: 1,
+        doublePlay: false,
+        bases: null
+    };
+}
+
+function processHit(baseRunners, hitDistance) {
+    const hitType = determineHitType();
+
+    switch(hitType) {
+        case "strikeout":
+            return handleStrikeout();
+        case "flyball":
+            return handleFlyball(baseRunners, hitDistance);
+        case "groundball":
+            return handleGroundball(baseRunners);
+        default:
+            return handleLineHit(baseRunners, hitType); // 單打/二壘打/三壘打/全壘打
+    }
+}
+
+let currentPitchType = 'fast';
+document.querySelectorAll('.pitch-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.pitch-btn').forEach(b=>b.classList.remove('selected'));
+    btn.classList.add('selected');
+    currentPitchType = btn.dataset.type;
+    log(`選擇投球：${btn.innerText}`);
+  });
+});
+
+// 修改投球函式
+function doPitch(){
+  if(awaitingSwing){ log('等待揮棒...'); return; }
+  const pitch = { type: currentPitchType, aim: Number(aimEl.value), power: Number(powerEl.value) };
+  currentPitch = pitch;
+  const res = resolvePitch(pitch);
+  // 以下保持原本 doPitch 內邏輯...
+}
+
+</script>
 </body>
 </html>
